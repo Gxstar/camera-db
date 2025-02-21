@@ -19,7 +19,7 @@
         <el-menu-item index="lens">镜头</el-menu-item>
         <el-sub-menu index="brands">
           <template #title>品牌</template>
-          <el-menu-item v-for="brand in brands" :key="brand.id" :index="`brand-${brand.id}`">{{ brand.name }}</el-menu-item>
+          <el-menu-item v-for="brand in brands" :key="brand.id" :index="`brand-${brand.id}`">{{ brand.brand_name_zh}}</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="about">关于</el-menu-item>
       </div>
@@ -30,6 +30,7 @@
   import { ref, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
   import axios from 'axios';
+  import API_CONFIG from '@/config/api';
 
   const activeIndex = ref('home');
   const router = useRouter();
@@ -64,7 +65,7 @@
 
   onMounted(async () => {
     try {
-      const response = await axios.get('https://your-api-url.com/brands');
+      const response = await axios.get(API_CONFIG.BRAND_LIST);
       brands.value = response.data;
     } catch (error) {
       console.error('Failed to fetch brands:', error);
