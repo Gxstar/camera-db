@@ -24,7 +24,7 @@
   
   // 切换事件回调
   const handleChange = (currentIndex, prevIndex) => {
-    console.log(`从 ${prevIndex} 切换到 ${currentIndex}`);
+    // console.log(`从 ${prevIndex} 切换到 ${currentIndex}`);
   };
   </script>
   

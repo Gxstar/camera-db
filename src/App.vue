@@ -8,7 +8,8 @@
             <router-view></router-view>
           </el-col>
           <el-col :span="8">
-            <div>这是侧边栏</div>
+            <User v-if="!isLoggedIn"/>
+            <UserInfoCom v-else/>
           </el-col>
         </el-row>
       </el-col>
@@ -18,6 +19,11 @@
 
 <script setup>
 import Header from './components/Header.vue';
+import User from './components/sidebar/UserCom.vue';
+import UserInfoCom from './components/sidebar/UserInfoCom.vue';
+import { ref } from 'vue';
+
+const isLoggedIn = ref(false);
 </script>
 
 <style scoped>

@@ -22,57 +22,8 @@
         <el-menu-item v-for="brand in brands" :key="brand.id" :index="`brand-${brand.id}`">{{ brand.brand_name_zh}}</el-menu-item>
       </el-sub-menu>
       <el-menu-item index="about">关于</el-menu-item>
-      <el-menu-item v-if="!isLoggedIn" index="login" @click="showLoginModal">
-        <el-icon><User /></el-icon>
-        <span>登录</span>
-      </el-menu-item>
-      <el-dropdown v-else trigger="click" @command="handleDropdownCommand">
-        <template #trigger>
-          <img src="https://via.placeholder.com/30" alt="Avatar" class="avatar" />
-        </template>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="userInfo">用户信息</el-dropdown-item>
-          <el-dropdown-item command="logout">登出</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
     </div>
   </el-menu>
-
-  <el-dialog 
-    v-model="loginModalVisible" 
-    title="登录" 
-    width="400px" 
-    center 
-    :close-on-click-modal="false"
-  >
-    <el-form 
-      :model="loginForm" 
-      label-width="80px" 
-      label-position="top" 
-      class="login-form"
-    >
-      <el-form-item label="用户名">
-        <el-input 
-          v-model="loginForm.username" 
-          placeholder="请输入用户名" 
-          prefix-icon="User"
-        />
-      </el-form-item>
-      <el-form-item label="密码">
-        <el-input 
-          v-model="loginForm.password" 
-          type="password" 
-          placeholder="请输入密码" 
-          prefix-icon="Lock"
-          show-password
-        />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="loginModalVisible = false" round>取消</el-button>
-      <el-button type="primary" @click="handleLogin" round>登录</el-button>
-    </template>
-  </el-dialog>
 </template>
 
 <script setup>
@@ -80,17 +31,13 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import API_CONFIG from '@/config/api';
-import { User, SwitchButton, Lock } from '@element-plus/icons-vue';
+
 
 const activeIndex = ref('home');
 const router = useRouter();
 const brands = ref([]);
 const isLoggedIn = ref(false);
-const loginModalVisible = ref(false);
-const loginForm = ref({
-  username: '',
-  password: ''
-});
+
 
 const handleSelect = (index) => {
   activeIndex.value = index;
