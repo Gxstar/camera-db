@@ -21,9 +21,10 @@
 import Header from './components/Header.vue';
 import User from './components/sidebar/UserCom.vue';
 import UserInfoCom from './components/sidebar/UserInfoCom.vue';
+import { useAuthStore } from './stores/counter.js';
 import { ref } from 'vue';
 
-const isLoggedIn = ref(false);
+const isLoggedIn = useAuthStore.isLoggedIn;
 </script>
 
 <style scoped>

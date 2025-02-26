@@ -27,6 +27,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { User, Lock } from '@element-plus/icons-vue'; // 确保导入图标组件
+import { login,register } from '@/services/userService';
+import { useAuthStore } from '@/stores/counter.js';
 
 const router = useRouter();
 const loginForm = ref({
@@ -42,13 +44,19 @@ const rules = ref({
     ]
 });
 
-const handleLogin = () => {
+const handleLogin = async() => {
     // 假设登录成功
-    isLoggedIn.value = true;
+    const loginData=await login(loginForm.value).then(res => {
+        console.log(res);  
+    })
+    useAuthStore.login(loginData)
     console.log('Login:', loginForm.value);
 }
 
-const handleRegister = () => {
+const handleRegister = async() => {
+    register(loginForm.value).then(res => {
+        console.log(res);
+    })
     console.log('Register:', loginForm.value);
 }
 
