@@ -12,18 +12,66 @@
   </el-table>
   <el-button type="primary" @click="handleAdd">添加用户</el-button>
 
-  <!-- 编辑用户对话框 -->
-  <el-dialog :visible.sync="editDialogVisible" title="编辑用户信息">
-    <template #content>
-      <el-form :model="editForm" label-width="80px">
-        <el-form-item label="用户名">
-          <el-input v-model="editForm.username" />
+  <!-- 添加用户对话框 -->
+  <el-dialog 
+    v-model="addDialogVisible" 
+    title="添加用户"
+    width="30%"
+    align-center
+    class="user-add-dialog"
+  >
+    <template #default>
+      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="addForm.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="editForm.email" />
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="addForm.password" placeholder="请输入密码" show-password />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="addForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="头像地址">
+          <el-input v-model="addForm.avatar" placeholder="请输入头像URL" />
         </el-form-item>
         <el-form-item label="角色">
-          <el-input v-model="editForm.role" />
+          <el-select v-model="addForm.role" placeholder="请选择角色">
+            <el-option label="管理员" value="admin" />
+            <el-option label="普通用户" value="user" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </template>
+    <template #footer>
+      <el-button @click="addDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="submitAdd">添加</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- 编辑用户对话框 -->
+  <el-dialog 
+    v-model="editDialogVisible" 
+    title="编辑用户信息"
+    width="30%"
+    align-center
+    class="user-edit-dialog"
+  >
+    <template #default>
+      <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="100px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="头像地址">
+          <el-input v-model="editForm.avatar" placeholder="请输入头像URL" />
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="editForm.role" placeholder="请选择角色">
+            <el-option label="管理员" value="admin" />
+            <el-option label="普通用户" value="user" />
+          </el-select>
         </el-form-item>
       </el-form>
     </template>
@@ -36,7 +84,39 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { getUserList, updateUser, deleteUser } from '@/services/userService';
+import { getUserList, updateUser, deleteUser, register } from '@/services/userService';
+
+// 添加表单引用
+const addFormRef = ref(null);
+const editFormRef = ref(null);
+
+// 添加表单验证规则
+const addFormRules = ref({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6到20个字符之间', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: ['blur', 'change'] }
+  ]
+});
+
+// 编辑表单验证规则
+const editFormRules = ref({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: ['blur', 'change'] }
+  ]
+});
 
 const tableData = ref([]);
 // 控制编辑对话框的显示与隐藏
@@ -67,17 +147,18 @@ const handleEdit = (userId, userData) => {
 
 const submitEdit = async () => {
   try {
+    await editFormRef.value.validate();
     const updatedUser = await updateUser(currentEditUserId.value, editForm.value);
-    // 更新表格数据
     const index = tableData.value.findIndex(user => user.id === currentEditUserId.value);
-    if (index!== -1) {
+    if (index !== -1) {
       tableData.value[index] = updatedUser;
     }
-    // 关闭编辑对话框
     editDialogVisible.value = false;
     console.log('用户信息更新成功:', updatedUser);
   } catch (error) {
-    console.error('更新用户信息失败:', error);
+    if (error.name !== 'ValidateError') {
+      console.error('更新用户信息失败:', error);
+    }
   }
 };
 
@@ -92,8 +173,74 @@ const handleDelete = async (userId) => {
   }
 };
 
+// 控制添加对话框的显示与隐藏
+const addDialogVisible = ref(false);
+// 添加表单的数据
+const addForm = ref({
+  username: '',
+  password: '',
+  email: '',
+  avatar: '',
+  role: 'user'
+});
+
 const handleAdd = () => {
-  console.log('添加用户');
-  // 这里可以添加打开添加用户表单的逻辑
+  addDialogVisible.value = true;
+  addForm.value = {
+    username: '',
+    password: '',
+    email: '',
+    avatar: '',
+    role: 'user'
+  };
+};
+
+const submitAdd = async () => {
+  try {
+    await addFormRef.value.validate();
+    const newUser = await register(addForm.value);
+    tableData.value.push(newUser);
+    addDialogVisible.value = false;
+    console.log('用户添加成功:', newUser);
+  } catch (error) {
+    if (error.name !== 'ValidateError') {
+      console.error('添加用户失败:', error);
+    }
+  }
 };
 </script>
+
+<style scoped>
+.user-edit-dialog {
+  border-radius: 8px;
+}
+
+.user-edit-dialog .el-form-item {
+  margin-bottom: 20px;
+}
+
+.user-edit-dialog .el-input,
+.user-edit-dialog .el-select {
+  width: 100%;
+}
+
+.user-edit-dialog .el-form-item:first-child {
+  margin-top: 20px;
+}
+.user-add-dialog {
+  border-radius: 8px;
+}
+
+.user-add-dialog .el-form-item {
+  margin-bottom: 20px;
+}
+
+.user-add-dialog .el-input,
+.user-add-dialog .el-select {
+  width: 100%;
+}
+
+.user-add-dialog .el-form-item:first-child {
+  margin-top: 20px;
+}
+</style>

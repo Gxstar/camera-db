@@ -3,7 +3,7 @@
     <el-header>
       <h1>管理后台</h1>
     </el-header>
-    <el-main>
+    <el-main v-if="authStore.isAdmin">
       <el-tabs type="border-card">
         <el-tab-pane label="用户管理">
           <UserTable />
@@ -19,11 +19,13 @@
         </el-tab-pane>
       </el-tabs>
     </el-main>
+    <el-main v-else>
+      <p>您没有权限访问此页面。</p>
+    </el-main>
   </el-container>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
 import { userAuthStore } from '@/stores/counter'
 import UserTable from '@/components/admin/UserTable.vue'
 import BrandTable from '@/components/admin/BrandTable.vue'
@@ -32,12 +34,7 @@ import LensTable from '@/components/admin/LensTable.vue'
 
 const authStore = userAuthStore()
 
-onMounted(() => {
-  if (!authStore.isAdmin) {
-    // 如果不是管理员，重定向到首页
-    router.push('/')
-  }
-})
+
 </script>
 
 <style scoped>
