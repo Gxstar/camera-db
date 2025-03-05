@@ -16,6 +16,21 @@ export const userAuthStore = defineStore('auth', () => {
   // 从 localStorage 获取 token
   const token = ref(localStorage.getItem('token') || null)
 
+  // 初始化函数，从 localStorage 恢复状态
+  function initialize() {
+    if (token.value) {
+      // 这里需要根据你的实际需求解析token或从localStorage获取用户信息
+      const storedUserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      userInfo.value = {
+        username: storedUserInfo.username,
+        role: storedUserInfo.role,
+        avatar: storedUserInfo.avatar,
+        token: token.value
+      }
+      isLoggedIn.value = true
+    }
+  }
+
   // 计算属性，判断用户是否为管理员
   const isAdmin = computed(() => userInfo.value?.role === 'admin')
 
@@ -49,6 +64,11 @@ export const userAuthStore = defineStore('auth', () => {
       token: userData.token
     }
     setToken(userData.token)
+    localStorage.setItem('userInfo', JSON.stringify({
+      username: userData.username,
+      role: userData.role,
+      avatar: userData.avatar
+    }))
   }
 
   /**
@@ -63,8 +83,12 @@ export const userAuthStore = defineStore('auth', () => {
       token: null
     }
     clearToken()
+    localStorage.removeItem('userInfo')
   }
 
+  // 立即初始化
+  initialize()
+  
   return {
     isLoggedIn,
     userInfo,

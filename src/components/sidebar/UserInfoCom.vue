@@ -27,7 +27,6 @@ import { userAuthStore } from '@/stores/counter';
 
 const router = useRouter();
 const authStore = userAuthStore();
-
 const goToAdmin = () => {
     router.push('/admin');
 };

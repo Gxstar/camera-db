@@ -46,22 +46,24 @@ const rules = ref({
 });
 
 const handleLogin = async() => {
-    // 假设登录成功
     const { username, password } = loginForm.value;
-    const loginData=await login(username, password).then(res => {
-        console.log(res);  
-    })
-    ElMessage.success('登录成功');
-    router.push('/');
+    try {
+        const loginData = await login(username, password);
+        ElMessage.success('登录成功');
+        router.push('/');
+    } catch (error) {
+        ElMessage.error(error.response?.data?.detail || '登录失败，请检查用户名和密码');
+    }
 }
 
 const handleRegister = async() => {
-    register(loginForm.value).then(res => {
-        console.log(res);
-    })
-    console.log('Register:', loginForm.value);
+    try {
+        const res = await register(loginForm.value);
+        ElMessage.success('注册成功');
+    } catch (error) {
+        ElMessage.error(error.response?.data?.detail || '注册失败，请稍后重试');
+    }
 }
-
 </script>
 
 <style scoped>

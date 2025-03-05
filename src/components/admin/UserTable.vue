@@ -1,5 +1,5 @@
 <template>
-  <el-table :data="tableData" style="width: 100%">
+  <el-table :data="paginatedData" style="width: 100%">
     <el-table-column prop="username" label="用户名" width="180" />
     <el-table-column prop="email" label="邮箱" width="180" />
     <el-table-column prop="role" label="角色" />
@@ -10,6 +10,18 @@
       </template>
     </el-table-column>
   </el-table>
+
+  <!-- 分页 -->
+  <el-pagination
+    v-model:current-page="currentPage"
+    v-model:page-size="pageSize"
+    :page-sizes="[10, 20, 50, 100]"
+    :total="tableData.length"
+    layout="total, sizes, prev, pager, next, jumper"
+    @size-change="handleSizeChange"
+    @current-change="handleCurrentChange"
+  />
+
   <el-button type="primary" @click="handleAdd">添加用户</el-button>
 
   <!-- 添加用户对话框 -->
@@ -83,15 +95,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { getUserList, updateUser, deleteUser, register } from '@/services/userService';
 
-// 添加表单引用
-const addFormRef = ref(null);
-const editFormRef = ref(null);
+// 常量定义
+const INITIAL_ADD_FORM = {
+  username: '',
+  password: '',
+  email: '',
+  avatar: '',
+  role: 'user'
+};
 
-// 添加表单验证规则
-const addFormRules = ref({
+// 表单验证规则
+const formRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' }
@@ -104,29 +121,30 @@ const addFormRules = ref({
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: ['blur', 'change'] }
   ]
-});
+};
 
-// 编辑表单验证规则
-const editFormRules = ref({
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在3到20个字符之间', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: ['blur', 'change'] }
-  ]
-});
-
+// 状态管理
 const tableData = ref([]);
-// 控制编辑对话框的显示与隐藏
+const addDialogVisible = ref(false);
 const editDialogVisible = ref(false);
-// 编辑表单的数据
+const addForm = ref({ ...INITIAL_ADD_FORM });
 const editForm = ref({});
-// 存储当前编辑用户的 ID
 const currentEditUserId = ref(null);
+const currentPage = ref(1);
+const pageSize = ref(20);
 
-// 在组件挂载时获取用户列表
+// 表单引用
+const addFormRef = ref(null);
+const editFormRef = ref(null);
+
+// 计算属性
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end);
+});
+
+// 初始化
 onMounted(async () => {
   try {
     const users = await getUserList();
@@ -136,13 +154,39 @@ onMounted(async () => {
   }
 });
 
+// 用户操作
+const handleAdd = () => {
+  addDialogVisible.value = true;
+  addForm.value = { ...INITIAL_ADD_FORM };
+};
+
 const handleEdit = (userId, userData) => {
-  // 显示编辑对话框
   editDialogVisible.value = true;
-  // 复制用户数据到编辑表单
   editForm.value = { ...userData };
-  // 记录当前编辑用户的 ID
   currentEditUserId.value = userId;
+};
+
+const handleDelete = async (userId) => {
+  try {
+    await deleteUser(userId);
+    tableData.value = tableData.value.filter(user => user.id !== userId);
+  } catch (error) {
+    console.error('删除用户失败:', error);
+  }
+};
+
+// 表单提交
+const submitAdd = async () => {
+  try {
+    await addFormRef.value.validate();
+    const newUser = await register(addForm.value);
+    tableData.value.push(newUser);
+    addDialogVisible.value = false;
+  } catch (error) {
+    if (error.name !== 'ValidateError') {
+      console.error('添加用户失败:', error);
+    }
+  }
 };
 
 const submitEdit = async () => {
@@ -154,7 +198,6 @@ const submitEdit = async () => {
       tableData.value[index] = updatedUser;
     }
     editDialogVisible.value = false;
-    console.log('用户信息更新成功:', updatedUser);
   } catch (error) {
     if (error.name !== 'ValidateError') {
       console.error('更新用户信息失败:', error);
@@ -162,85 +205,33 @@ const submitEdit = async () => {
   }
 };
 
-const handleDelete = async (userId) => {
-  try {
-    await deleteUser(userId);
-    // 从表格数据中移除已删除的用户
-    tableData.value = tableData.value.filter(user => user.id!== userId);
-    console.log('用户删除成功');
-  } catch (error) {
-    console.error('删除用户失败:', error);
-  }
+// 分页处理
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1;
 };
 
-// 控制添加对话框的显示与隐藏
-const addDialogVisible = ref(false);
-// 添加表单的数据
-const addForm = ref({
-  username: '',
-  password: '',
-  email: '',
-  avatar: '',
-  role: 'user'
-});
-
-const handleAdd = () => {
-  addDialogVisible.value = true;
-  addForm.value = {
-    username: '',
-    password: '',
-    email: '',
-    avatar: '',
-    role: 'user'
-  };
-};
-
-const submitAdd = async () => {
-  try {
-    await addFormRef.value.validate();
-    const newUser = await register(addForm.value);
-    tableData.value.push(newUser);
-    addDialogVisible.value = false;
-    console.log('用户添加成功:', newUser);
-  } catch (error) {
-    if (error.name !== 'ValidateError') {
-      console.error('添加用户失败:', error);
-    }
-  }
+const handleCurrentChange = (newPage) => {
+  currentPage.value = newPage;
 };
 </script>
 
 <style scoped>
-.user-edit-dialog {
+/* 合并对话框样式 */
+.user-dialog {
   border-radius: 8px;
 }
 
-.user-edit-dialog .el-form-item {
+.user-dialog .el-form-item {
   margin-bottom: 20px;
 }
 
-.user-edit-dialog .el-input,
-.user-edit-dialog .el-select {
+.user-dialog .el-input,
+.user-dialog .el-select {
   width: 100%;
 }
 
-.user-edit-dialog .el-form-item:first-child {
-  margin-top: 20px;
-}
-.user-add-dialog {
-  border-radius: 8px;
-}
-
-.user-add-dialog .el-form-item {
-  margin-bottom: 20px;
-}
-
-.user-add-dialog .el-input,
-.user-add-dialog .el-select {
-  width: 100%;
-}
-
-.user-add-dialog .el-form-item:first-child {
+.user-dialog .el-form-item:first-child {
   margin-top: 20px;
 }
 </style>
