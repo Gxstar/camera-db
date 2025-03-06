@@ -1,9 +1,39 @@
 <template>
-  <el-table :data="paginatedData" style="width: 100%" border>
-    <el-table-column prop="brand_name_en" label="品牌英文名" width="200" />
-    <el-table-column prop="brand_name_zh" label="品牌中文名" width="200" />
-    <el-table-column prop="logo_url" label="Logo URL" min-width="300" />
-    <el-table-column prop="official_website" label="官网链接" min-width="300" />
+  <el-table :data="paginatedData" style="width: 100%">
+    <el-table-column prop="brand_name_en" label="品牌英文名" min-width="120">
+      <template #default="scope">
+        <span class="brand-name">{{ scope.row.brand_name_en }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="brand_name_zh" label="品牌中文名" min-width="120">
+      <template #default="scope">
+        <span class="brand-name">{{ scope.row.brand_name_zh }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column label="Logo" width="80">
+      <template #default="scope">
+        <div class="logo-container">
+          <img 
+            :src="scope.row.logo_url" 
+            alt="Logo" 
+            class="logo-image"
+            onerror="this.src='https://via.placeholder.com/80'"
+          >
+        </div>
+      </template>
+    </el-table-column>
+    <el-table-column label="官网链接" width="300">
+      <template #default="scope">
+        <a 
+          :href="scope.row.official_website" 
+          target="_blank" 
+          class="website-link"
+          :title="scope.row.official_website"
+        >
+          {{ scope.row.official_website }}
+        </a>
+      </template>
+    </el-table-column>
     <el-table-column label="操作" width="150" fixed="right">
       <template #default="scope">
         <el-button size="small" @click="handleEdit(scope.row.id, scope.row)">编辑</el-button>
@@ -179,7 +209,7 @@ const submitAdd = async () => {
     tableData.value.push(newBrand);
     addDialogVisible.value = false;
   } catch (error) {
-    if (error.name !== 'ValidateError') {
+    if (error.name!== 'ValidateError') {
       console.error('添加品牌失败:', error);
     }
   }
@@ -190,12 +220,12 @@ const submitEdit = async () => {
     await editFormRef.value.validate();
     const updatedBrand = await updateBrand(currentEditBrandId.value, editForm.value);
     const index = tableData.value.findIndex(brand => brand.id === currentEditBrandId.value);
-    if (index !== -1) {
+    if (index!== -1) {
       tableData.value[index] = updatedBrand;
     }
     editDialogVisible.value = false;
   } catch (error) {
-    if (error.name !== 'ValidateError') {
+    if (error.name!== 'ValidateError') {
       console.error('更新品牌信息失败:', error);
     }
   }
@@ -213,6 +243,28 @@ const handleCurrentChange = (newPage) => {
 </script>
 
 <style scoped>
+/* 去掉表格边框 */
+.el-table {
+  border: none;
+}
+
+/* 去掉单元格边框 */
+.el-table td,
+.el-table th.is-leaf {
+  border: none;
+}
+
+/* 去掉表头底部边框 */
+.el-table::before {
+  height: 0;
+}
+
+/* 保持表格布局 */
+.el-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
 /* 合并对话框样式 */
 .brand-dialog {
   border-radius: 8px;
@@ -229,5 +281,40 @@ const handleCurrentChange = (newPage) => {
 
 .brand-dialog .el-form-item:first-child {
   margin-top: 20px;
+}
+
+/* 官网链接样式 */
+.website-link {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Logo 容器样式 */
+.logo-container {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logo 图片样式 */
+.logo-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* 品牌名称样式 */
+.brand-name {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
