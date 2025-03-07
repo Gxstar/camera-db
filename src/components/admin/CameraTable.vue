@@ -66,7 +66,7 @@
             :src="scope.row.image_url" 
             alt="Camera" 
             class="camera-image"
-            onerror="this.src='https://via.placeholder.com/80'"
+            
           >
         </div>
       </template>
@@ -235,6 +235,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { getCameraList, updateCamera, deleteCamera, createCamera } from '@/services/cameraService'
 import { getBrandList } from '@/services/brandService'
 
@@ -341,9 +342,8 @@ const formRules = {
     { required: true, message: '请选择发布日期', trigger: 'blur' },
     { type: Date, default: () => new Date() }
   ],
-  image_url: [
-    { required: true, message: '请输入图片URL', trigger: 'blur' }
-  ]
+  // 修改此处，将图片 URL 字段设置为非必填
+  image_url: [] 
 }
 
 // 生命周期钩子
@@ -390,8 +390,10 @@ const submitEdit = async () => {
       tableData.value[index] = updatedCamera
     }
     editDialogVisible.value = false
+    ElMessage.success('相机信息更新成功')
   } catch (error) {
     console.error('更新相机信息失败:', error)
+    ElMessage.error('相机信息更新失败')
   }
 }
 

@@ -17,7 +17,6 @@
             :src="scope.row.logo_url" 
             alt="Logo" 
             class="logo-image"
-            onerror="this.src='https://via.placeholder.com/80'"
           >
         </div>
       </template>
@@ -118,6 +117,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import { getBrandList, updateBrand, deleteBrand, createBrand } from '@/services/brandService';
 
 // 常量定义
@@ -208,6 +208,7 @@ const submitAdd = async () => {
     const newBrand = await createBrand(addForm.value);
     tableData.value.push(newBrand);
     addDialogVisible.value = false;
+    ElMessage.success('品牌添加成功');
   } catch (error) {
     if (error.name!== 'ValidateError') {
       console.error('添加品牌失败:', error);
@@ -224,6 +225,7 @@ const submitEdit = async () => {
       tableData.value[index] = updatedBrand;
     }
     editDialogVisible.value = false;
+    ElMessage.success('品牌信息更新成功');
   } catch (error) {
     if (error.name!== 'ValidateError') {
       console.error('更新品牌信息失败:', error);
